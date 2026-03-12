@@ -3,8 +3,13 @@ import 'package:password_manager/UI/add_account_screen.dart';
 import '../database/db_helper.dart';
 import '../models/accounts.dart';
 import 'edit_account_screen.dart';
+import '../database/sharepref_helper.dart';
 
 class HomeScreen extends StatefulWidget {
+  bool isDarkMode = false;
+  Future<void> Function(bool) onThemeChanged;
+
+  HomeScreen({required this.isDarkMode, required this.onThemeChanged});
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -12,12 +17,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
 
   List<Account> accounts = [];
-
   @override
   void initState() {
     super.initState();
+    loadThemeState();
     loadAccounts();
+
   }
+
 
   Future loadAccounts() async {
     final data = await DatabaseHelper.instance.getAccounts();
@@ -26,17 +33,25 @@ class _HomeScreenState extends State<HomeScreen> {
     for (var item in data) {
       datas.add(Account.fromMap(item));
     }
-
     setState(() {
       accounts = datas;
     });
   }
 
+  Future<void> loadThemeState() async {
+    bool themeState = await Shareprefshelper.getThemeState();
+    setState(() {
+      widget.isDarkMode = themeState;
+    });
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text("Quản lý mật khẩu"),
+        actions: [
+          Switch(value: widget.isDarkMode, onChanged: widget.onThemeChanged)
+        ],
       ),
 
       body: accounts.isEmpty
